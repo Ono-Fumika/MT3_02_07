@@ -392,42 +392,56 @@ void DrawAABB(const AABB& aabb, const Matrix4x4& viewProjectionMatrix, const Mat
 // 衝突判定
 bool IsCollision(const AABB& aabb, const Segment& segment) {
 	// 媒介変数
-	float xMin = aabb.min.x - segment.origin.x; // X
-	float tXmin = xMin / segment.diff.x;
-	float xMax = aabb.max.x - segment.origin.x;
-	float tXmax = xMax / segment.diff.x;
+	float tMin = 0.0f;
+	float tMax = 1.0f;
 
-	float yMin = aabb.min.y - segment.origin.y; // Y
-	float tYmin = yMin / segment.diff.y;
-	float yMax = aabb.max.y - segment.origin.y;
-	float tYmax = yMax / segment.diff.y;
+	// X軸の判定
+	if (segment.diff.x != 0.0f) {
+		float t1 = (aabb.min.x - segment.origin.x) / segment.diff.x;
+		float t2 = (aabb.max.x - segment.origin.x) / segment.diff.x;
 
-	float zMin = aabb.min.z - segment.origin.z; // Z
-	float tZmin = zMin / segment.diff.z;
-	float zMax = aabb.max.z - segment.origin.z;
-	float tZmax = zMax / segment.diff.z;
-
-
-	// 衝突点
-	float tNearX = min(tXmin, tXmax);
-	float tNearY = min(tYmin, tYmax);
-	float tNearZ = min(tZmin, tZmax);
-
-	float tFarX = max(tXmin, tXmax);
-	float tFarY = max(tYmin, tYmax);
-	float tFarZ = max(tZmin, tZmax);
-
-	// AABBとの衝突店のｔが小さい方
-	float tmin = max(max(tNearX, tNearY), tNearZ);
-	// AABBとの衝突店のｔが大きい方
-	float tmax = min(min(tFarX, tFarY), tFarZ);
-
-	if (tmin <= tmax) {
-		return true;
+		tMin = max(tMin, min(t1, t2));
+		tMax = min(tMax, max(t1, t2));
+	}
+	else if (segment.origin.x < aabb.min.x || segment.origin.x > aabb.max.x) {
+		// 線分がAABBの範囲外にある場合、衝突しない
+		return false;
 	}
 
+	// Y軸の判定
+	if (segment.diff.y != 0.0f) {
+		float t1 = (aabb.min.y - segment.origin.y) / segment.diff.y;
+		float t2 = (aabb.max.y - segment.origin.y) / segment.diff.y;
+
+		tMin = max(tMin, min(t1, t2));
+		tMax = min(tMax, max(t1, t2));
+	}
+	else if (segment.origin.y < aabb.min.y || segment.origin.y > aabb.max.y) {
+		// 線分がAABBの範囲外にある場合、衝突しない
+		return false;
+	}
+
+	// Z軸の判定
+	if (segment.diff.z != 0.0f) {
+		float t1 = (aabb.min.z - segment.origin.z) / segment.diff.z;
+		float t2 = (aabb.max.z - segment.origin.z) / segment.diff.z;
+
+		tMin = max(tMin, min(t1, t2));
+		tMax = min(tMax, max(t1, t2));
+	}
+	else if (segment.origin.z < aabb.min.z || segment.origin.z > aabb.max.z) {
+		// 線分がAABBの範囲外にある場合、衝突しない
+		return false;
+	}
+
+	// 線分がAABBと交差しているかどうかを判定
+	if (tMin <= tMax) {
+		return true;
+	}
 	return false;
 }
+
+
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
